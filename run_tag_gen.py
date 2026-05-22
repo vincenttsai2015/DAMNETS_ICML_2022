@@ -6,7 +6,7 @@ import utils.graph_utils as graph_utils
 from utils.arg_helper import get_config
 from types import SimpleNamespace
 from baselines.TagGen.graph_fairnet import Config, main, data_process
-
+from time import time
 
 def create_edgelists(el_fstr, train_graphs):
     '''
@@ -149,7 +149,10 @@ def run_tag_gen(test_dir=None, graphs_file=None):
     T = len(train_graphs[0])
     el_fstr = os.path.join(test_dir, 'train_edgelists')
     create_edgelists(el_fstr, train_graphs)
+    train_start_time = time()
     train_test_tag_gen(T, el_fstr)
+    train_end_time = time()-train_start_time
+    print(f'Training time: {train_end_time}')
 
     ts_list = []
     for entry in os.scandir(el_fstr):

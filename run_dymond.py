@@ -6,6 +6,7 @@ import utils.graph_utils as graph_utils
 from utils.arg_helper import get_config
 from baselines.DYMOND.DYMOND import get_dataset, learn_parameters, dymond_generate
 from multiprocessing import Pool
+from time import time
 
 def create_directories(fstr, train_graphs):
     try:
@@ -63,6 +64,7 @@ def train_test_dymond(path):
     dymond_generate(dataset_dir, dataset_info['T'] + 1)
 
 def run_dymond(test_dir=None, graphs_file=None):
+    start_time = time()
     if test_dir is None:
         with open('experiment_files/last_test.txt', 'r') as f:
             test_dir = f.readline()
@@ -93,7 +95,8 @@ def run_dymond(test_dir=None, graphs_file=None):
             g = nx.from_edgelist(list(e.tuple for e in ig_ts.es.select(lambda e: e['timestep'] == t)))
             sampled_ts.append(g)
         ts_list.append(sampled_ts)
-
+    end_time = time() - start_time
+    print(f'Training time: {end_time}')
     graph_utils.save_graph_list(ts_list, os.path.join(test_dir, 'sampled_ts.pkl'))
 
 if __name__ == '__main__':
