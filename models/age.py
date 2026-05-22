@@ -55,7 +55,7 @@ class AGE(nn.Module):
 
     def forward(self, data):
         y = data['y'] if 'y' in data else None
-        y_lab = data['y_lab'] if 'y_lab' in data else None
+        y_lab = data['y_label'] if 'y_label' in data else None
         x = data['x'] if 'x' in data else None
         adj = data['adj'] if 'adj' in data else None
         is_sampling = data['is_sampling'] if 'is_sampling' in data else None

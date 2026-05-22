@@ -40,7 +40,7 @@ def data_process(args, interval, biased, time_windows=2, data_directory='./data/
             new_graph[nodes[1], nodes[0]] = 1.0
     for i in range(len(node_index)):
         new_graph[i, i] = 1
-    degree = np.array(np.sum(new_graph, axis=1), dtype=np.int)
+    degree = np.array(np.sum(new_graph, axis=1), dtype=np.int8)
     node_similarity = graph_similarity(new_graph)
     data = dict()
     data['original_index'] = original_node_index
@@ -166,6 +166,7 @@ def preprocess_edgelist(data_directory, interval, directed, time_windows):
     # find the minimal timestamp
     with open(data_directory, 'r') as f:
         for line in f:
+            print(line)
             line = list(map(int, line.split()))
             if line[2] < min_time_stamp:
                 min_time_stamp = line[2]

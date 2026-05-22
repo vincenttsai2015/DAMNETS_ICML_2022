@@ -16,24 +16,22 @@ import time
 class Config(object):
     # parameters for transformer
     N = 1
-    d_model = 80
-    d_ff = 128
+    d_model = 100
+    d_ff = 32
     h = 4
     dropout = 0.2
     output_size = 2
     lr = 0.003
-    max_epochs = 30
-    batch_size = 64
+    max_epochs = 10
+    batch_size = 8
     # max number of nodes
     max_sen_len = 25
     # prob for action [insert, delete, skip]
-    action_prob = [0.45, 0.35, 0.2]
+    action_prob = [0.2, 0.5, 0.3]
     search_size = 500
     sample_time = 20
     # parameter for accelerating the computation
     windows_size = 2
-
-
 
 def clones(module, N):
     "Produce N identical layers."

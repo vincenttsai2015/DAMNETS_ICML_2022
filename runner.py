@@ -93,7 +93,7 @@ class Runner:
                 model.train()
                 batch_data = []
                 for _ in gpus:
-                    data = train_iterator.next()
+                    data = train_iterator.__next__()
                     batch_data.append(data)
                     iter_count += 1
                 opt.zero_grad()
@@ -140,8 +140,7 @@ class Runner:
 
     def sample_nts(self, graphs, model):
         sampler = GNNTestSampler(graphs, self.args, tag=f'multistep_test')
-        loader = DataLoader(sampler,
-                             collate_fn=sampler.collate_fn,
+        loader = DataLoader(sampler, collate_fn=sampler.collate_fn,
                              batch_size=self.args.experiment.test.batch_size)
 
         model.eval()
@@ -151,8 +150,11 @@ class Runner:
             for batch_idx, ts_data in enumerate(tqdm(loader)):
                 # Each data is a batch of time series
                 ts_batch = []
+                # print(f'ts_data={ts_data}')
+                # print(f'length of ts_data={len(ts_data)}')
                 for t, data in enumerate(ts_data):
-                    ts_batch += model.forward(data)
+                    # print(f't={t}, data={data}')
+                    ts_batch += model(data)
                 ts_batch = [ts_data[0]['adj']] + ts_batch
                 assert len(ts_batch) == len(graphs[0])
                 ts_batches.append(ts_batch)
@@ -160,8 +162,11 @@ class Runner:
         ts_list = []
         for ts_batch in ts_batches:
             for b in range(ts_batch[0].shape[0]):
+                # print(f'b={b}')
                 ts = []
                 for t in range(self.args.dataset.T):
+                    # print(f't={t}')
+                    # print(f'ts_batch={ts_batch[t][b]}')
                     ts.append(nx.Graph(ts_batch[t][b].cpu().numpy()))
                 assert len(ts) == len(graphs[0])
                 ts_list.append(ts)
@@ -170,14 +175,12 @@ class Runner:
 
     def test(self):
         gpus = self.exp_args.gpus
-        # device = self.exp_args.gpus[0]
-        test_graphs = graph_utils.load_graph_ts(
-            os.path.join(self.args.experiment.test.graph_dir, 'test_graphs.pkl'))
+        #device = self.exp_args.gpus[0]
+        test_graphs = graph_utils.load_graph_ts(os.path.join(self.args.experiment.test.graph_dir, 'test_graphs.pkl'))
         model = eval(self.model_args.name)(self.args)#.to(device)
         model = torch.nn.DataParallel(model, device_ids=None, output_device=gpus[0]).to(gpus[0])
         ## Sample the Markov Results
-        best_markov_file = os.path.join(self.args.model_save_dir,
-                                       f'{self.args.experiment.test.best_val_epoch}.pt')
+        best_markov_file = os.path.join(self.args.model_save_dir, f'{self.args.experiment.test.best_val_epoch}.pt')
         print(f'Best Model File : {best_markov_file}')
         load_model(model, best_markov_file)
         markov_ts = self.sample_nts(test_graphs, model)

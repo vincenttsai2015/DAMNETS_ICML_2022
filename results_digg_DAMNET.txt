@@ -1,0 +1,59 @@
+Dataset: digg
+Model: DAMNET
+
+Per-timestamp MMD scores:
+Timestamp 0:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 1:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 2:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 3:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 4:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 5:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 6:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 7:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 8:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 9:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+
+Average MMD scores:
+  Average Degree MMD: 0.000000
+  Average Clustering MMD: 0.000000
+  Average Spectral MMD: 0.000000
+
+Example: Average degree histogram at timestamp 0:
+  Reference: [ 0.   0.  23.5 23.9 14.2  9.2  5.4  5.   4.6  1.9  2.2  2.   1.1  1.5
+  1.1  1.2  0.4  0.4  0.3  0.2  0.6  0.4  0.1  0.2  0.1  0.   0.   0.2
+  0.   0.   0.   0.   0.   0.1  0.   0.1  0.   0.   0.   0.   0.   0.
+  0.   0.   0.   0.1]
+  Generated: [ 0.   0.  23.5 23.9 14.2  9.2  5.4  5.   4.6  1.9  2.2  2.   1.1  1.5
+  1.1  1.2  0.4  0.4  0.3  0.2  0.6  0.4  0.1  0.2  0.1  0.   0.   0.2
+  0.   0.   0.   0.   0.   0.1  0.   0.1  0.   0.   0.   0.   0.   0.
+  0.   0.   0.   0.1]

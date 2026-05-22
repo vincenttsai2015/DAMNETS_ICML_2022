@@ -84,5 +84,5 @@ dependencies:
     - pyasn1-modules==0.2.8
     - pyparsing==2.4.7
     - urllib3==1.25.9
-prefix: C:\Users\lecheng\Anaconda3\envs\TagGen
+
 

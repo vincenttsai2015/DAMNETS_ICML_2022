@@ -96,12 +96,16 @@ def plot_statistic_density(ts_list, s_fun, ax, label, col=None, n_workers=8, fil
     std = np.zeros(T)
 
     fun = partial(s_catch, s_fun=s_fun)
-    with multiprocessing.Pool(n_workers) as p:
-        for t in range(T):
-            stats = p.map(fun, [ts[t] for ts in ts_list])
-            mean[t] = np.mean(stats)
-            std[t] = np.std(stats)
-
+    for t in range(T):
+        stats = [fun(ts[t]) for ts in ts_list]
+        mean[t] = np.mean(stats)
+        std[t] = np.std(stats)
+    # with multiprocessing.Pool(n_workers) as p:
+    #     for t in range(T):
+    #         stats = p.map(fun, [ts[t] for ts in ts_list])
+    #         mean[t] = np.mean(stats)
+    #         std[t] = np.std(stats)
+    
     if col is None:
         ax.plot(mean, label=label)
         if fill:

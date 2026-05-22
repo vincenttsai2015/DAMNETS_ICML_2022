@@ -12,8 +12,10 @@ class GNNTestSampler(torch.utils.data.Dataset):
         self.N = len(ts_list)
         self.batch_size = min(args.experiment.test.batch_size, self.N)
         graphs_flatten = [G for ts in ts_list for G in ts]
-        self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
-        if not hasattr(args.dataset, 'max_n'):
+        if hasattr(args.dataset, 'max_n'):
+            self.max_n = args.dataset.max_n
+        else:
+            self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
             args.dataset.max_n = self.max_n
 
         self.file_names = []
@@ -28,19 +30,23 @@ class GNNTestSampler(torch.utils.data.Dataset):
             # n_timesteps = 1 if k is None else max(self.T - k, 1)
             for t in range(self.T - 1):
                 G_0 = ts_list[bb][t]
-                A = nx.to_numpy_array(G_0)
-                edges_x = torch.from_numpy(A).to_sparse()
-                edges_x = edges_x.coalesce().indices().long()
-
                 n = G_0.number_of_nodes()
-                node_feat = np.diag(np.ones(n))
+                A = nx.to_numpy_array(G_0)
+                padded_A = np.zeros((self.max_n, self.max_n))
+                padded_A[0:n, 0:n] = A
+                edges_x = torch.from_numpy(padded_A).to_sparse()
+                edges_x = edges_x.coalesce().indices().long()
+                
+                v = np.zeros(self.max_n)
+                v[:n] = np.ones(n)
+                node_feat = np.diag(v)
 
-                idx = np.array([[i, j] for i in range(1, n) for j in range(i)])
-                prev_edges = A[idx[:, 0], idx[:, 1]]
+                idx = np.array([[i, j] for i in range(1, self.max_n) for j in range(i)])
+                prev_edges = padded_A[idx[:, 0], idx[:, 1]]
                 data = {'node_feat': node_feat,
                         'edges_x': edges_x,
                         'prev_edges': prev_edges,
-                        'adj': A,
+                        'adj': padded_A,
                         'ts_ix': ts_ix,}
                         # 'y': y if y is not None else None}
                 ts_batch.append(data)

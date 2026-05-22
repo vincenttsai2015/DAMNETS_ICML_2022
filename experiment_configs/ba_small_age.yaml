@@ -20,7 +20,7 @@ model:
 experiment:
   gpus: [0]
   train:
-    batch_size: 128
+    batch_size: 64
     num_workers: 4
     shuffle_data: False
     epochs: 20000
@@ -45,8 +45,10 @@ experiment:
     num_fwd: 3
     num_cc_samples: 3
     batch_size: 10000
+    es_buffer: 100
+    es_patience: 20    
   test:
-    batch_size: 32
+    batch_size: 64
     loader: TFTestSampler
 
 dataset:
@@ -57,4 +59,4 @@ dataset:
   m: 4
   snapshot_iters: 5
   fixed_node_set: True
-  n_workers: 1
+  n_workers: 4

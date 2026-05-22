@@ -11,8 +11,10 @@ class TFTestSampler(torch.utils.data.Dataset):
         self.T = len(ts_list[0])
         self.N = len(ts_list)
         graphs_flatten = [G for ts in ts_list for G in ts]
-        self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
-        if not hasattr(args.dataset, 'max_n'):
+        if hasattr(args.dataset, 'max_n'):
+            self.max_n = args.dataset.max_n
+        else:
+            self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
             args.dataset.max_n = self.max_n
 
         self.file_names = []

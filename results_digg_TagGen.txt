@@ -1,0 +1,59 @@
+Dataset: digg
+Model: TagGen
+
+Per-timestamp MMD scores:
+Timestamp 0:
+  Degree MMD: 0.226470
+  Clustering MMD: 0.163500
+  Spectral MMD: 0.081532
+Timestamp 1:
+  Degree MMD: 0.226280
+  Clustering MMD: 0.160320
+  Spectral MMD: 0.078533
+Timestamp 2:
+  Degree MMD: 0.226280
+  Clustering MMD: 0.160320
+  Spectral MMD: 0.078533
+Timestamp 3:
+  Degree MMD: 0.226280
+  Clustering MMD: 0.160320
+  Spectral MMD: 0.078533
+Timestamp 4:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+Timestamp 5:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+Timestamp 6:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+Timestamp 7:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+Timestamp 8:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+Timestamp 9:
+  Degree MMD: 0.224502
+  Clustering MMD: 0.157997
+  Spectral MMD: 0.080568
+
+Average MMD scores:
+  Average Degree MMD: 0.225232
+  Average Clustering MMD: 0.159244
+  Average Spectral MMD: 0.080054
+
+Example: Average degree histogram at timestamp 0:
+  Reference: [ 0.   0.  23.5 23.9 14.2  9.2  5.4  5.   4.6  1.9  2.2  2.   1.1  1.5
+  1.1  1.2  0.4  0.4  0.3  0.2  0.6  0.4  0.1  0.2  0.1  0.   0.   0.2
+  0.   0.   0.   0.   0.   0.1  0.   0.1  0.   0.   0.   0.   0.   0.
+  0.   0.   0.   0.1]
+  Generated: [ 0.   0.   0.   0.  18.  28.4 16.   8.4  6.6  4.2  3.6  2.4  2.8  2.4
+  0.8  1.   1.8  0.8  0.8  0.8  0.4  0.   0.   0.4  0.   0.4  0.   0.
+  0.   0.   0.   0.   0.   0.   0.   0.   0.   0.   0.   0.   0.   0.
+  0.   0.   0.   0. ]

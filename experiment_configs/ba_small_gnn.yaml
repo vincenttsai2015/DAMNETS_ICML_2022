@@ -25,7 +25,7 @@ model:  # See paper for all the arguments in model section.
 experiment:
   gpus: [0]
   train:
-    batch_size: 128
+    batch_size: 32
     num_workers: 4
     shuffle_data: False
     epochs: 20000
@@ -59,4 +59,4 @@ dataset:
   n: 15  # BA(n,m) model
   m: 5  # BA(n,m) model
   snapshot_iters: 3  # How many iterations to aggregate
-  n_workers: 10  # Number of threads to generate graphs on
+  n_workers: 4  # Number of threads to generate graphs on

@@ -73,7 +73,7 @@ class DMNETS_GNN_MB(nn.Module):
         edges_y = data['edges_y'] if 'edges_y' in data else None
         subgraph_idx = data['subgraph_idx'] if 'subgraph_idx' in data else None
         diffs_idx = data['diffs_idx'] if 'diffs_idx' in data else None
-        labels = data['labels'] if 'labels' in data else None
+        labels = data['y_label'] if 'y_label' in data else None
         prev_edges = data['prev_edges'] if 'prev_edges' in data else None
         node_feat_idx = data['node_feat_idx'] if 'node_feat_idx' in data else None
         batch_size = data['batch_size'] if 'batch_size' in data else None

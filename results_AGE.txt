@@ -1,0 +1,56 @@
+Model: AGE
+
+Per-timestamp MMD scores:
+Timestamp 0:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 1:
+  Degree MMD: 0.030720
+  Clustering MMD: 0.365042
+  Spectral MMD: 0.076607
+Timestamp 2:
+  Degree MMD: 0.036275
+  Clustering MMD: 0.413858
+  Spectral MMD: 0.075883
+Timestamp 3:
+  Degree MMD: 0.034208
+  Clustering MMD: 0.371362
+  Spectral MMD: 0.076147
+Timestamp 4:
+  Degree MMD: 0.033440
+  Clustering MMD: 0.370320
+  Spectral MMD: 0.075986
+Timestamp 5:
+  Degree MMD: 0.036161
+  Clustering MMD: 0.440025
+  Spectral MMD: 0.077811
+Timestamp 6:
+  Degree MMD: 0.030673
+  Clustering MMD: 0.330744
+  Spectral MMD: 0.076405
+Timestamp 7:
+  Degree MMD: 0.030449
+  Clustering MMD: 0.404282
+  Spectral MMD: 0.077072
+Timestamp 8:
+  Degree MMD: 0.032610
+  Clustering MMD: 0.324185
+  Spectral MMD: 0.077440
+Timestamp 9:
+  Degree MMD: 0.033259
+  Clustering MMD: 0.344243
+  Spectral MMD: 0.075557
+
+Average MMD scores:
+  Average Degree MMD: 0.029779
+  Average Clustering MMD: 0.336406
+  Average Spectral MMD: 0.068891
+
+Example: Average degree histogram at timestamp 0:
+  Reference: [ 0.   0.   0.   0.   9.6 20.4 22.6 25.6 19.8 17.2 16.2 12.   9.2  8.8
+  6.4  6.8  4.8  4.8  3.6  2.6  2.6  1.2  1.2  0.6  0.4  0.8  0.6  0.6
+  0.4  0.   0.8  0.   0.   0.2  0.2]
+  Generated: [ 0.   0.   0.   0.   9.6 20.4 22.6 25.6 19.8 17.2 16.2 12.   9.2  8.8
+  6.4  6.8  4.8  4.8  3.6  2.6  2.6  1.2  1.2  0.6  0.4  0.8  0.6  0.6
+  0.4  0.   0.8  0.   0.   0.2  0.2]

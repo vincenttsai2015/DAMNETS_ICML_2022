@@ -12,9 +12,12 @@ class TFTSampler(torch.utils.data.Dataset):
         self.T = len(ts_list[0])
         self.N = len(ts_list)
         graphs_flatten = [G for ts in ts_list for G in ts]
-        self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
-        if not hasattr(args.dataset, 'max_n'):
+        if hasattr(args.dataset, 'max_n'):
+            self.max_n = args.dataset.max_n
+        else:
+            self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
             args.dataset.max_n = self.max_n
+        print(f'max_n: {self.max_n}')
 
         data_cache = os.path.join(args.save_dir, 'data_cache')
         if not os.path.isdir(data_cache):
@@ -27,16 +30,20 @@ class TFTSampler(torch.utils.data.Dataset):
         for b in range(self.N):
             for t in range(self.T - 1):
                 x = np.tril(nx.to_numpy_array(ts_list[b][t]), k=-1)
+                padded_x = np.zeros((self.max_n, self.max_n))
+                padded_x[0:x.shape[0],0:x.shape[1]] = x
                 y = np.tril(nx.to_numpy_array(ts_list[b][t + 1]), k=-1)
+                padded_y = np.zeros((self.max_n, self.max_n))
+                padded_y[0:y.shape[0],0:y.shape[1]] = y
                 labels = []
-                for i in range(1, y.shape[0]):
-                    labels += [y[i, :i]]
+                for i in range(1, padded_y.shape[0]):
+                    labels += [padded_y[i, :i]]
                 labels = np.concatenate(labels)
                 # Remove the last row of y adjacency (don't need it for forward pass)
-                y = y[:-1]
+                padded_y = padded_y[:-1]
                 # Set the first row to be all ones (SOS token for forward pass)
-                y[0] = 1
-                data = {'x': x, 'y': y, 'y_lab': labels}
+                padded_y[0] = 1
+                data = {'x': padded_x, 'y': padded_y, 'y_label': labels}
                 path = os.path.join(data_cache, f'{tag}_{ix}.pkl')
                 pickle.dump(data, open(path, 'wb'))
                 self.file_names.append(path)
@@ -49,7 +56,7 @@ class TFTSampler(torch.utils.data.Dataset):
         return {
             'x': torch.stack([to_float_tensor(sample['x']) for sample in batch]),
             'y': torch.stack([to_float_tensor(sample['y']) for sample in batch]),
-            'y_lab': torch.stack([to_float_tensor(sample['y_lab']) for sample in batch])
+            'y_label': torch.stack([to_float_tensor(sample['y_label']) for sample in batch])
         }
 
     def __len__(self):

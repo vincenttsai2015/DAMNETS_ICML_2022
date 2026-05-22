@@ -1,0 +1,57 @@
+Dataset: superuser
+Model: DAMNET
+
+Per-timestamp MMD scores:
+Timestamp 0:
+  Degree MMD: 0.000000
+  Clustering MMD: 0.000000
+  Spectral MMD: 0.000000
+Timestamp 1:
+  Degree MMD: 0.362638
+  Clustering MMD: 0.359237
+  Spectral MMD: 0.244567
+Timestamp 2:
+  Degree MMD: 0.368803
+  Clustering MMD: 0.362194
+  Spectral MMD: 0.235643
+Timestamp 3:
+  Degree MMD: 0.364922
+  Clustering MMD: 0.313866
+  Spectral MMD: 0.243577
+Timestamp 4:
+  Degree MMD: 0.364515
+  Clustering MMD: 0.315877
+  Spectral MMD: 0.238125
+Timestamp 5:
+  Degree MMD: 0.370312
+  Clustering MMD: 0.393635
+  Spectral MMD: 0.252209
+Timestamp 6:
+  Degree MMD: 0.354653
+  Clustering MMD: 0.328221
+  Spectral MMD: 0.233651
+Timestamp 7:
+  Degree MMD: 0.351431
+  Clustering MMD: 0.374441
+  Spectral MMD: 0.225074
+Timestamp 8:
+  Degree MMD: 0.359509
+  Clustering MMD: 0.354370
+  Spectral MMD: 0.235889
+Timestamp 9:
+  Degree MMD: 0.356873
+  Clustering MMD: 0.399257
+  Spectral MMD: 0.236668
+
+Average MMD scores:
+  Average Degree MMD: 0.325366
+  Average Clustering MMD: 0.320110
+  Average Spectral MMD: 0.214540
+
+Example: Average degree histogram at timestamp 0:
+  Reference: [ 0.    0.    0.   15.   13.8   9.6  35.7  20.85 11.7  10.35  7.65  4.05
+  3.45  3.15  2.1   2.4   3.    2.25  0.75  0.75  1.05  0.9   0.45  0.
+  0.6   0.15  0.15  0.15]
+  Generated: [ 0.    0.    0.   15.   13.8   9.6  35.7  20.85 11.7  10.35  7.65  4.05
+  3.45  3.15  2.1   2.4   3.    2.25  0.75  0.75  1.05  0.9   0.45  0.
+  0.6   0.15  0.15  0.15]

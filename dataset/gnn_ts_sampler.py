@@ -13,9 +13,12 @@ class GNNTSampler(torch.utils.data.Dataset):
         self.T = len(ts_list[0])
         self.N = len(ts_list)
         graphs_flatten = [G for ts in ts_list for G in ts]
-        self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
-        if not hasattr(args.dataset, 'max_n'):
+        if hasattr(args.dataset, 'max_n'):
+            self.max_n = args.dataset.max_n
+        else:
+            self.max_n = max([G.number_of_nodes() for G in graphs_flatten])
             args.dataset.max_n = self.max_n
+        print(f'max_n: {self.max_n}')
         self.ts_list = ts_list
         data_cache = os.path.join(args.save_dir, 'data_cache')
         if not os.path.isdir(data_cache):
@@ -28,8 +31,12 @@ class GNNTSampler(torch.utils.data.Dataset):
         for b in range(self.N):
             for t in range(self.T-1):
                 x = nx.to_numpy_array(ts_list[b][t])
+                padded_x = np.zeros((self.max_n, self.max_n))
+                padded_x[0:x.shape[0],0:x.shape[1]] = x
                 y = nx.to_numpy_array(ts_list[b][t+1])
-                data = self.process_pair(x, y)
+                padded_y = np.zeros((self.max_n, self.max_n))
+                padded_y[0:y.shape[0],0:y.shape[1]] = y
+                data = self.process_pair(padded_x, padded_y)
                 path = os.path.join(data_cache, f'{tag}_{ix}.pkl')
                 pickle.dump(data, open(path, 'wb'))
                 self.file_names.append(path)
@@ -91,7 +98,7 @@ class GNNTSampler(torch.utils.data.Dataset):
                 'node_feat': node_feat,
                 'subgraph_idx': np.concatenate(subgraph_idx),
                 'diffs_idx': np.concatenate(diffs_idx),
-                'labels': np.concatenate(labels),
+                'y_label': np.concatenate(labels),
                 'prev_edges': np.concatenate(prev_edges),
                 'node_feat_idx': np.concatenate(node_feat_idx),
                 'total_subgraph_incr': sum(subgraph_size)}
@@ -128,8 +135,8 @@ class GNNTSampler(torch.utils.data.Dataset):
         data['diffs_idx'] = torch.from_numpy(
             np.concatenate([bb['diffs_idx'] for b, bb in enumerate(batch)])
         ).long()
-        data['labels'] = torch.from_numpy(
-            np.concatenate([bb['labels'] for bb in batch])
+        data['y_label'] = torch.from_numpy(
+            np.concatenate([bb['y_label'] for bb in batch])
         ).float()
         data['prev_edges'] = torch.from_numpy(
             np.concatenate([bb['prev_edges'] for bb in batch])

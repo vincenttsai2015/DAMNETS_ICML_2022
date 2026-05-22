@@ -1,0 +1,55 @@
+Dataset: twitter
+Model: TagGen
+
+Per-timestamp MMD scores:
+Timestamp 0:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 1:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 2:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 3:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 4:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 5:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 6:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 7:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 8:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+Timestamp 9:
+  Degree MMD: 0.241725
+  Clustering MMD: 0.144058
+  Spectral MMD: 0.078205
+
+Average MMD scores:
+  Average Degree MMD: 0.241725
+  Average Clustering MMD: 0.144058
+  Average Spectral MMD: 0.078205
+
+Example: Average degree histogram at timestamp 0:
+  Reference: [ 0.    0.    0.   13.35 44.4  31.35 16.95 12.75  9.3   5.55  3.9   2.85
+  1.8   1.05  1.95  1.5   1.2   0.3   0.45  0.9   0.15  0.3   0.    0.  ]
+  Generated: [ 0.   0.   0.   0.   0.  12.6 46.2 30.  19.2 11.4  8.4  6.   4.2  3.
+  1.8  0.6  1.2  0.6  0.6  0.6  0.   2.4  0.   1.2]

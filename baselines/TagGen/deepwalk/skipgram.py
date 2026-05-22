@@ -1,4 +1,5 @@
-from collections import Counter, Mapping
+from collections import Counter
+from collections.abc import Mapping
 from concurrent.futures import ProcessPoolExecutor
 import logging
 from multiprocessing import cpu_count
