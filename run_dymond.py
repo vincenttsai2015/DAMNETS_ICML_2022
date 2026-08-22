@@ -1,6 +1,13 @@
+import os
+import shutil
+import sys
+
+# utils 沒有 __init__.py，是靠 sys.path 找到的 namespace package，
+# 解析結果會隨 CWD 改變。明確把這支檔案所在的目錄放到最前面。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import pickle
 import igraph
-import os
 import networkx as nx
 import utils.graph_utils as graph_utils
 from utils.arg_helper import get_config
@@ -9,10 +16,11 @@ from multiprocessing import Pool
 from time import time
 
 def create_directories(fstr, train_graphs):
-    try:
-        os.mkdir(fstr)
-    except FileExistsError:
-        pass
+    # 先清空再重建。收集結果時是掃遍 fstr 底下所有子目錄去讀
+    # generated_graph.pklz，上次執行留下的高編號目錄沒有那個檔，
+    # 序列數變少時會讀不到而中止。
+    shutil.rmtree(fstr, ignore_errors=True)
+    os.makedirs(fstr, exist_ok=True)
     for k, ts in enumerate(train_graphs):
         # Make a subdirectory for each timeseries to store edgelist
         ts_path = os.path.join(fstr, f'{k}')
@@ -83,7 +91,10 @@ def run_dymond(test_dir=None, graphs_file=None):
     if len(dirs) == 1:
         train_test_dymond(dirs[0])
     else:
-        with Pool() as p:
+        # Pool() 預設用 os.cpu_count()，那是整台機器的核數；
+        # SLURM 只配給我們 --cpus-per-task 個，用 affinity 才拿得到正確數字。
+        n_proc = len(os.sched_getaffinity(0)) if hasattr(os, 'sched_getaffinity') else None
+        with Pool(processes=n_proc) as p:
             p.map(train_test_dymond, dirs)
     ts_list = []
 
@@ -98,6 +109,9 @@ def run_dymond(test_dir=None, graphs_file=None):
     end_time = time() - start_time
     print(f'Training time: {end_time}')
     graph_utils.save_graph_list(ts_list, os.path.join(test_dir, 'sampled_ts.pkl'))
+    # 每條序列都會留下 igraph pickle 與 learned_parameters，結果收進
+    # sampled_ts.pkl 之後就沒用了。累積下來會把家目錄配額塞爆。
+    shutil.rmtree(fstr, ignore_errors=True)
 
 if __name__ == '__main__':
     import sys

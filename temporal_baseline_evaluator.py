@@ -1,4 +1,7 @@
-import graph_tool.all as gt
+try:
+    import graph_tool.all as gt
+except ImportError:
+    gt = None  # 只有 is_sbm_graph() 需要，本流程不會呼叫
 ##Navigate to the ./util/orca directory and compile orca.cpp
 # g++ -O2 -std=c++11 -o orca orca.cpp
 import os, sys
@@ -787,6 +790,22 @@ if __name__ == '__main__':
             test_graphs = pickle.load(f_test)
             print(f'There are {len(test_graphs)} testing temporal graph sequences of length {len(test_graphs[0])}.')
         
+        # MMD 的計算是 O(n^2)：dist_helper.disc() 對兩組圖做所有配對的 EMD，
+        # compute_mmd 呼叫它三次，再乘上 4 個時間點與 3 個指標。
+        # 序列數一萬以上時無法在合理時間內完成，因此可用 MMD_MAX_SEQS 設上限。
+        # 抽樣用固定亂數種子，test 與 generated 取相同索引（兩者一一對應）。
+        _cap = int(os.environ.get('MMD_MAX_SEQS', '0'))
+        if _cap and len(test_graphs) > _cap:
+            _n_before = len(test_graphs)
+            _rng = random.Random(0)
+            _idx = sorted(_rng.sample(range(_n_before), _cap))
+            _aligned = (len(sampled_graphs) == _n_before)
+            test_graphs = [test_graphs[i] for i in _idx]
+            if _aligned:
+                sampled_graphs = [sampled_graphs[i] for i in _idx]
+            print(f'[MMD_MAX_SEQS] subsampled {_n_before} -> {_cap} sequences '
+                  f'(generated aligned: {_aligned}, seed=0)')
+
         print('Transposing the data structure...')
         transposed_sampled_graphs = list(map(list, zip(*sampled_graphs)))
         transposed_test_graphs = list(map(list, zip(*test_graphs)))

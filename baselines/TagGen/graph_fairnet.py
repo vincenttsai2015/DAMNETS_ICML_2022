@@ -347,6 +347,13 @@ def threshold(train_iterator, model):
         predicted = y_pred.cpu().data[:, 1]
         indices = torch.max(y_pred.cpu().data, 1)[1]
         all_preds.extend(predicted[np.where(indices == 1)])
+    # 模型可能把所有樣本都判成類別 0，此時 all_preds 是空的（在節點數很少、
+    # 結構高度重複的資料上會發生）。呼叫端是 max(threshold(...), 0.9)，
+    # 0.9 是作者設的下限，所以回傳 0.0 讓門檻落在下限上，
+    # 行為與「平均值本來就很低」一致，而不是整支中斷。
+    if len(all_preds) == 0:
+        print('[WARN] threshold(): no sample predicted as class 1, falling back to the 0.9 floor')
+        return 0.0
     return sum(all_preds)/len(all_preds)
 
 
@@ -473,13 +480,18 @@ def generate_sequence(config, output_directory, model):
             g.write(', '.join(map(str, node_sequence)) + '\n')
 
 
+# DataLoader 的 num_workers 由 8 改為 0。
+# run_tag_gen.py 已經在「每條序列」這一層用 multiprocessing 平行，
+# 而 Pool 的 worker 是 daemon 行程、不允許再開子行程，
+# DataLoader 一旦要開 worker 就會拋 AssertionError。
+# 原本的 8 也超過 SLURM 配給的 4 個 CPU，本來就在噴警告。
 def main(args, config, output_directory):
     if args.mode:
         train_dataset = data_loader(output_directory, config.embedding, config.node_embedding, 'train', args.mode)
-        train_iterator = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=8)
+        train_iterator = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
         device = torch.device('cuda:{}'.format(args.gpu) if torch.cuda.is_available() else 'cpu')
         val_dataset = data_loader(output_directory, config.embedding, config.node_embedding,  'val')
-        val_iterator = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=True, num_workers=8)
+        val_iterator = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=True, num_workers=0)
         model = Transformer(config).to(device)
         model = model.double()
         model.device = device
@@ -494,7 +506,7 @@ def main(args, config, output_directory):
         model.device = device
         model.learning_rate = 0.08
         train_dataset = data_loader(output_directory, config.embedding, config.node_embedding,  'train')
-        train_iterator = DataLoader(train_dataset, batch_size=50, shuffle=True, num_workers=8)
+        train_iterator = DataLoader(train_dataset, batch_size=50, shuffle=True, num_workers=0)
         config.threshold = max(threshold(train_iterator, model), 0.9)
         generate_sequence(config, output_directory, model)
 

@@ -1,7 +1,13 @@
-import pickle
-
-import igraph
 import os
+import shutil
+import sys
+
+# utils 在 repo 根目錄且沒有 __init__.py，是 namespace package，
+# 解析結果隨 sys.path 改變。明確把根目錄放到最前面。
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+import pickle
+import igraph
 import networkx as nx
 import utils.graph_utils as graph_utils
 from utils.arg_helper import get_config
@@ -9,10 +15,11 @@ from baselines.DYMOND.DYMOND import get_dataset, learn_parameters, dymond_genera
 from multiprocessing import Pool
 
 def create_directories(fstr, train_graphs):
-    try:
-        os.mkdir(fstr)
-    except FileExistsError:
-        pass
+    # 先清空再重建。收集結果時是掃遍 fstr 底下所有子目錄去讀
+    # generated_graph.pklz，上次執行留下的高編號目錄沒有那個檔，
+    # 序列數變少時會讀不到而中止。
+    shutil.rmtree(fstr, ignore_errors=True)
+    os.makedirs(fstr, exist_ok=True)
     for k, ts in enumerate(train_graphs):
         # Make a subdirectory for each timeseries to store edgelist
         ts_path = os.path.join(fstr, f'{k}')

@@ -129,7 +129,10 @@ class DMNETS_GNN_MB(nn.Module):
             theta_logits_1 = self.output_theta_1(diffs)
             theta_logits_2 = self.output_theta_2(diffs)
             # Get the prev_edges for the ith row
-            edge_ix = sum(np.arange(i+1, dtype=np.uint8))
+            # 原本是 sum(np.arange(i+1, dtype=np.uint8))。Python 的 sum 逐項累加
+            # np.uint8 純量，累加器也是 uint8，i(i+1)/2 超過 255 就會繞回去
+            # （i>=23 時發生），下一行的切片變成空的。改成直接算等差級數和。
+            edge_ix = i * (i + 1) // 2
             prev_edges_i = torch.flatten(prev_edges[:, edge_ix - i:edge_ix])
             theta_logits = theta_logits_1 * prev_edges_i[:, None] + theta_logits_2 * (1 - prev_edges_i[:, None])
             theta_logits = theta_logits.view(B, -1, self.num_mix_comp)

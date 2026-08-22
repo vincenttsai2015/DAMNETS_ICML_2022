@@ -1,0 +1,62 @@
+---
+exp_dir: experiment_files/
+seed: 0456
+
+model:
+  name: AGE
+  predict_full_adj: True  # If set to True on a fixed node set, will use adjacency vectors of size n-1 (n is number of nodes in node set).
+  hidden_size: 64
+  encoder:
+    num_layers: 3
+    num_attn_heads: 4
+    dim_feedforward: 256
+    dropout: 0.5
+  decoder:
+    num_layers: 3
+    num_attn_heads: 2
+    dim_feedforward: 256
+    dropout: 0.5
+
+experiment:
+  gpus: [0]
+  train:
+    batch_size: 32
+    num_workers: 0
+    shuffle_data: False
+    epochs: 10
+    optimizer: Adam
+    lr: 0.03
+    train_prop: 0.8
+    cycle_len: 75
+    lr_decay: 0.3
+    weight_decay: 0.0
+    label_smoothing: 0
+    prev_edge_smoothing: 0.05
+    milestones: [2500, 7500]
+    snapshot_epochs: 50
+    display_iters: 10
+    clip_grad: 3
+    use_writer: False
+  validation:
+    markov_buffer: 100
+    val_p: 0.2
+    val_epochs: 5
+    correction_patience: 20
+    max_corrections: 10
+    num_fwd: 3
+    num_cc_samples: 3
+    batch_size: 32
+    es_buffer: 100
+    es_patience: 20    
+  test:
+    batch_size: 32
+    loader: TFTestSampler
+
+dataset:
+  name: macro_superuser_c2a_hysteresis
+  path: data/macro/nx_macro_superuser_hysteresis_L1_c2a.pkl
+  loader_name: TFTSampler
+  max_n: 200
+  N: 3396
+  T: 32
+  ratio: 0.8

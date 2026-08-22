@@ -72,8 +72,10 @@ class GNNTSampler(torch.utils.data.Dataset):
             edge_idx = torch.from_numpy(adj_block).to_sparse()
             edges_y += [edge_idx.coalesce().indices().long()]
             subgraph_size += [i]  # Size of first subgraph is 1 node. Grows one at a time.
+            # 索引的型別要容得下 max_n。int8 在 128 以上會繞回負數，
+            # A_2[負數, col] 取到的是尾端算回來的列，labels 與 prev_edges 都會錯。
             idx_row_gnn, idx_col_gnn = np.meshgrid(
-                (np.ones(1) * i).astype(np.int8), np.arange(i))
+                np.full(1, i, dtype=np.int64), np.arange(i))
             idx_row_gnn = idx_row_gnn.reshape(-1, 1)
             idx_col_gnn = idx_col_gnn.reshape(-1, 1)
             diffs_idx += [
