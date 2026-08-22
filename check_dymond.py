@@ -5,10 +5,11 @@
     python check_dymond.py 0 wiki     只看名稱含 wiki 的
 
 DYMOND 原本用 nx.from_edgelist 收集結果，那個只建立有邊的節點——孤立節點
-會消失、整張沒邊就成了空圖。DAMNETS 與 AGE 是從固定大小的鄰接矩陣還原、
-節點集完整，兩邊對不起來會讓 degree 分佈的直方圖退化，MMD 算出負值。
+會消失、整張沒邊就成了零節點的圖。DAMNETS 與 AGE 是從固定大小的鄰接矩陣
+還原、節點集完整，兩邊對不起來會讓 degree 分佈的直方圖退化，MMD 算出負值。
 
-修好之後三個模型的節點數應該一致，DYMOND 的空圖比例也會降到與另外兩個相當。
+「無邊」那一欄數的是沒有任何邊的圖，那是正常的（節點集仍然完整，
+degree 直方圖是全零），不是問題。要看的是節點數三個模型一不一致。
 """
 import glob
 import os
@@ -37,7 +38,7 @@ def main():
     if not dirs:
         raise SystemExit(f"找不到 {ROOT}/macro_*_{seed}")
 
-    print(f"{'組合':46s} {'模型':8s} {'序列':>5s} {'節點':>12s} {'空圖':>14s}")
+    print(f"{'組合':46s} {'模型':8s} {'序列':>5s} {'節點':>12s} {'無邊':>14s}")
     bad = []
     for d in dirs:
         key = os.path.basename(d)

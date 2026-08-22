@@ -98,6 +98,11 @@ def run_dymond(test_dir=None, graphs_file=None):
             p.map(train_test_dymond, dirs)
     ts_list = []
 
+    # DAMNETS 與 AGE 都把每張補到 config 的 max_n，也就是資料裡的最大節點數。
+    # DYMOND 若只補到各自來源序列的節點數，零度節點的數量會不同，
+    # degree 直方圖因此偏移，MMD 比較就不公平。
+    max_n = max(g.number_of_nodes() for s in train_graphs for g in s)
+
     # scandir 的順序不保證是數字序，而目錄名就是 train_graphs 的索引。
     # 排序之後生成序列才與 test_graphs.pkl 一一對應。
     entries = sorted(os.scandir(fstr), key=lambda e: int(e.name))
@@ -108,8 +113,7 @@ def run_dymond(test_dir=None, graphs_file=None):
         # from_edgelist 只建立有邊的節點，孤立節點會消失、整張沒邊就成了空圖。
         # DAMNETS 與 AGE 是從固定大小的鄰接矩陣還原、節點集完整，
         # 節點數不一致會讓 degree 分佈的直方圖退化，MMD 算出負值。
-        n_nodes = max(train_graphs[int(entry.name)][0].number_of_nodes(),
-                      ig_ts.vcount())
+        n_nodes = max(max_n, ig_ts.vcount())
         for t in range(1, T + 1):
             g = nx.Graph()
             g.add_nodes_from(range(n_nodes))
