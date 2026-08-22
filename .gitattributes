@@ -1,0 +1,12 @@
+* text=auto
+
+# 在 Windows 上編輯過的檔案會帶 CRLF，SLURM 腳本一旦帶著 \r 到 Linux，
+# bash 會把它當成指令的一部分而報 command not found。
+*.sh text eol=lf
+*.py text eol=lf
+*.yaml text eol=lf
+*.yml text eol=lf
+
+*.pkl binary
+*.pth binary
+*.pklz binary

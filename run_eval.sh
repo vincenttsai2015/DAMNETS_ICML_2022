@@ -37,6 +37,12 @@ export PYTHONUNBUFFERED=1
 #
 # 預設 0 = 不設上限，使用全部序列，與 pipeline 內建的評估行為一致。
 # 只有在確定跑不完時才設值，且三個資料集要用同一個值，否則數字不可比。
+# 要納入比較的模型。TagGen 對每一條序列各自訓練一個 transformer，
+# superuser 一組要 24 小時以上，佔了整批九成以上的時間，因此移出預設。
+# 要加回來：BASELINE_MODELS="DAMNET AGE TagGen DYMOND"
+MODELS=${BASELINE_MODELS:-"DAMNET AGE DYMOND"}
+export BASELINE_MODELS="$MODELS"
+
 export MMD_MAX_SEQS=${MMD_MAX_SEQS:-0}
 
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
@@ -48,7 +54,7 @@ ROOT="../test_and_generated_graphs/${KEY}"
 
 echo "===== 檢查輸入 ====="
 MISSING=0
-for m in DYMOND AGE DAMNET TagGen; do
+for m in $MODELS; do
     for f in test_graphs.pkl sampled_ts.pkl; do
         if [ -f "${ROOT}/${m}/${f}" ]; then
             printf "  OK   %-8s %-18s %s\n" "$m" "$f" "$(du -h "${ROOT}/${m}/${f}" | cut -f1)"

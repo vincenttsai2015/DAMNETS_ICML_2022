@@ -39,7 +39,8 @@ cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 DS=${1:-wiki-vote}
 SEED=${2:-123}
-WHICH=${3:-both}
+# TagGen 移出預設，單組要 24 小時以上。要跑的話明確指定 taggen 或 both。
+WHICH=${3:-dymond}
 KEY="${DS}_${SEED}"
 ROOT="../test_and_generated_graphs/${KEY}"
 

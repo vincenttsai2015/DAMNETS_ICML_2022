@@ -17,6 +17,10 @@ set -eo pipefail
 cd "$(dirname "$0")"
 
 RESULT_ROOT=../test_and_generated_graphs
+# 要納入比較的模型。TagGen 對每一條序列各自訓練一個 transformer，
+# superuser 一組要 24 小時以上，佔了整批九成以上的時間，因此移出預設。
+# 要加回來：BASELINE_MODELS="DAMNET AGE TagGen DYMOND"
+MODELS=${BASELINE_MODELS:-"DAMNET AGE DYMOND"}
 SEED_TAG=${SEED_TAG:-0}
 LIMIT=${LIMIT:-20}
 SUBMIT=0
@@ -51,7 +55,7 @@ for d in $DIRS; do
     ds=${key%_*}
 
     miss=""
-    for m in DAMNET AGE TagGen DYMOND; do
+    for m in $MODELS; do
         [ -f "$d/$m/sampled_ts.pkl" ] || miss="$miss $m"
         [ -f "$d/$m/test_graphs.pkl" ] || miss="$miss ${m}(來源)"
     done

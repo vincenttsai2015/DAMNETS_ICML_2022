@@ -390,6 +390,6 @@ bash run_damnets.sh "$DS" "$MODEL" "$SEED"
 # 只在 gnn 那一輪跑，避免 age 那輪重複一次。
 if [ "${WITH_BASELINES:-1}" = "1" ] && [ "$MODEL" = "gnn" ]; then
     echo
-    echo "===== TagGen / DYMOND ====="
-    bash run_baselines.sh "$DS" "$SEED" both
+    echo "===== DYMOND ====="
+    bash run_baselines.sh "$DS" "$SEED"
 fi

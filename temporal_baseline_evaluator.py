@@ -778,7 +778,8 @@ def KS_evaluator(generated_graph_seqs, reference_graph_seqs):
 
 if __name__ == '__main__':
     dataset_name = sys.argv[1]
-    model_list = ['DYMOND','AGE','DAMNET','TagGen']
+    # 要納入比較的模型，見 run_eval.sh 的 BASELINE_MODELS
+    model_list = os.environ.get('BASELINE_MODELS', 'DYMOND AGE DAMNET').split()
     for model_name in model_list:
         print('Loading testing and sampled graph data...')
         test_graph_path = f'../test_and_generated_graphs/{dataset_name}/{model_name}/test_graphs.pkl' # fill in the corresponding info

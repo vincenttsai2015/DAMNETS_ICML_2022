@@ -15,6 +15,10 @@ set -eo pipefail
 cd "$(dirname "$0")"
 
 RESULT_ROOT=../test_and_generated_graphs
+# 要納入比較的模型。TagGen 對每一條序列各自訓練一個 transformer，
+# superuser 一組要 24 小時以上，佔了整批九成以上的時間，因此移出預設。
+# 要加回來：BASELINE_MODELS="DAMNET AGE TagGen DYMOND"
+MODELS=${BASELINE_MODELS:-"DAMNET AGE DYMOND"}
 LIMIT=${LIMIT:-20}
 SEED_TAG=${SEED_TAG:-}
 SUBMIT=0
@@ -84,7 +88,7 @@ for d in $DIRS; do
     ds=${key%_*}
 
     miss=""
-    for m in DAMNET AGE TagGen DYMOND; do
+    for m in $MODELS; do
         if [ -d "$d/$m" ] && [ -n "$(ls -A "$d/$m" 2>/dev/null)" ]; then
             # 四個模型都把生成結果寫成 sampled_ts.pkl。目錄非空不代表跑完，
             # run_baselines.sh 一開始就把 test_graphs.pkl 複製進去了。
@@ -115,9 +119,9 @@ for d in $DIRS; do
                 MISSING="${MISSING}# ${key} 缺 DAMNETS/AGE，要用 submit_macro.sh 重跑
 " ;;
             *)
-                which="both"
-                [ "${miss// /}" = "TagGen" ] && which="taggen"
-                [ "${miss// /}" = "DYMOND" ] && which="dymond"
+                # miss 只會是 MODELS 的子集，TagGen 不在預設清單裡
+                which="dymond"
+                case "$miss" in *TagGen*) which="both" ;; esac
                 MISSING="${MISSING}sbatch --job-name=bf_${key} run_baselines.sh ${ds} ${seed} ${which}
 " ;;
         esac
