@@ -48,6 +48,7 @@ def main():
 
     print(f"{'組合':46s} {'模型':8s} {'序列':>5s} {'節點':>12s} {'無邊':>14s}")
     bad = []
+    missing = []
     for d in dirs:
         key = os.path.basename(d)
         ns = {}
@@ -66,11 +67,20 @@ def main():
                   f"{rng:>12s} {empty:>7d}/{total:<6d}", flush=True)
 
         # 三個模型的節點數範圍要一致
-        if len(ns) == len(MODELS) and len(set(ns.values())) > 1:
+        lack = [m for m in MODELS if m not in ns]
+        if lack:
+            missing.append((key, lack))
+        elif len(set(ns.values())) > 1:
             bad.append((key, ns))
         print()
 
     print("=" * 70)
+    if missing:
+        print(f"{len(missing)} 組還沒跑完：")
+        for key, lack in missing:
+            print(f"  {key:50s} 缺 {' '.join(lack)}")
+        print()
+
     if bad:
         print(f"{len(bad)} 組的節點數對不起來：")
         for key, ns in bad:
@@ -79,8 +89,10 @@ def main():
                 print(f"      {m:8s} {lo}~{hi}")
         print()
         print("DYMOND 若是 0~N 而另外兩個是固定值，代表跑的還是舊版的 run_dymond.py。")
-    else:
+    elif not missing:
         print("三個模型的節點數都一致。")
+    else:
+        print("已跑完的組合節點數都一致。")
 
 
 if __name__ == "__main__":
