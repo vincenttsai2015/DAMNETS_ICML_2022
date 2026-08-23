@@ -3,6 +3,10 @@
     python check_dymond.py            掃 seed 0 的全部組合
     python check_dymond.py 1          掃 seed 1
     python check_dymond.py 0 wiki     只看名稱含 wiki 的
+    CHECK_SAMPLE=0 python check_dymond.py    每個檔讀完整（很慢）
+
+預設每個檔只取前 20 條序列——superuser 一個 sampled_ts.pkl 是 180 MB，
+32 組乘上 3 個模型全讀要很久，而節點數一不一致看前幾條就夠了。
 
 DYMOND 原本用 nx.from_edgelist 收集結果，那個只建立有邊的節點——孤立節點
 會消失、整張沒邊就成了零節點的圖。DAMNETS 與 AGE 是從固定大小的鄰接矩陣
@@ -18,15 +22,19 @@ import sys
 
 MODELS = ["DAMNET", "AGE", "DYMOND"]
 ROOT = "../test_and_generated_graphs"
+SAMPLE = int(os.environ.get("CHECK_SAMPLE", "20"))
 
 
 def stats(path):
     with open(path, "rb") as f:
         seqs = pickle.load(f)
+    total = len(seqs)
+    if SAMPLE:
+        seqs = seqs[:SAMPLE]
     n = [g.number_of_nodes() for s in seqs for g in s]
     e = [g.number_of_edges() for s in seqs for g in s]
     empty = sum(1 for x in e if x == 0)
-    return len(seqs), min(n), max(n), empty, len(e)
+    return total, min(n), max(n), empty, len(e)
 
 
 def main():
@@ -55,7 +63,7 @@ def main():
             ns[m] = (lo, hi)
             rng = f"{lo}~{hi}" if lo != hi else str(lo)
             print(f"{key if m == MODELS[0] else '':46s} {m:8s} {n_seq:>5d} "
-                  f"{rng:>12s} {empty:>7d}/{total:<6d}")
+                  f"{rng:>12s} {empty:>7d}/{total:<6d}", flush=True)
 
         # 三個模型的節點數範圍要一致
         if len(ns) == len(MODELS) and len(set(ns.values())) > 1:
