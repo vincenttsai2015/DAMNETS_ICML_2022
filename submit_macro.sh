@@ -342,11 +342,33 @@ N_COMBOS=320
 
 IN_QUEUE=$( { squeue -u "$USER" -h 2>/dev/null || true; } | wc -l )
 SLOTS=$((LIMIT - IN_QUEUE))
+
+# 正在跑的 array index。判準只看產出目錄存不存在，而 run_damnets.sh 一開始
+# 就會建目錄並複製 test_graphs.pkl 進去，所以「正在跑」與「已完成」看起來
+# 一樣；不排除的話重複執行會把同一個組合一送再送。
+RUNNING=""
+if [ "$IN_QUEUE" -gt 0 ]; then
+    for id in $(squeue -u "$USER" -h -o "%i" 2>/dev/null); do
+        case "$id" in
+            *_\[*\]*)
+                spec=${id#*_[}; spec=${spec%]*}; spec=${spec%\%*}
+                for part in $(echo "$spec" | tr ',' ' '); do
+                    case "$part" in
+                        *-*) for k in $(seq "${part%%-*}" "${part##*-}"); do
+                                 RUNNING="${RUNNING} ${k}"; done ;;
+                        *)   RUNNING="${RUNNING} ${part}" ;;
+                    esac
+                done ;;
+            *_*) RUNNING="${RUNNING} ${id##*_}" ;;
+        esac
+    done
+fi
+N_RUNNING_IDX=$(echo $RUNNING | wc -w)
 if [ -n "$1" ] && [ "$1" -lt "$SLOTS" ]; then
     SLOTS=$1
 fi
 
-echo "queue 現有 ${IN_QUEUE} 個，上限 ${LIMIT}，這次可送 ${SLOTS} 個"
+echo "queue 現有 ${IN_QUEUE} 個（對應 ${N_RUNNING_IDX} 個 index），上限 ${LIMIT}，這次可送 ${SLOTS} 個"
 if [ "$SLOTS" -le 0 ]; then
     echo "沒有名額，等前面跑完再執行一次。"
     exit 0
@@ -357,6 +379,7 @@ TODO=""
 N_TODO=0
 N_DONE=0
 N_SKIP=0
+N_RUN=0
 IDX=0
 while read -r group mode model seed; do
     [ -n "$group" ] || continue
@@ -373,6 +396,10 @@ while read -r group mode model seed; do
             *) N_SKIP=$((N_SKIP + 1)); continue ;;
         esac
     fi
+    # 已經在 queue 裡的 index 不重送
+    case " $RUNNING " in
+        *" $CUR "*) N_RUN=$((N_RUN + 1)); continue ;;
+    esac
     case "$model" in
         gnn) outdir=DAMNET ;;
         age) outdir=AGE ;;
@@ -391,7 +418,7 @@ done <<EOF
 $COMBOS
 EOF
 
-echo "已完成 ${N_DONE}，ONLY/SEEDS 過濾掉 ${N_SKIP}，這次送 ${N_TODO} 個"
+echo "已完成 ${N_DONE}，執行中 ${N_RUN}，ONLY/SEEDS 過濾掉 ${N_SKIP}，這次送 ${N_TODO} 個"
 if [ "$N_TODO" -eq 0 ]; then
     echo "沒有待跑的組合。"
     exit 0
