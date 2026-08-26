@@ -71,7 +71,14 @@ def train_test_dymond(path):
     learn_parameters(dataset_dir, dataset_info, g)
     dymond_generate(dataset_dir, dataset_info['T'] + 1)
 
-def run_dymond(test_dir=None, graphs_file=None):
+def run_dymond(test_dir=None, graphs_file=None, fit_frames=0):
+    """fit_frames > 0 時只用每條序列的前 fit_frames 張擬合。
+
+    DYMOND 是「對一條序列擬合 motif 的到達與存續統計，再重生一條同長度的」。
+    預設吃整條，那條就是要拿來評分的答案——等於看過答案再作答。
+    給 fit_frames 之後改成只看觀測窗，生成的長度也跟著是 fit_frames，
+    正好對上要預測的目標窗，跟 TIDE 同一個任務。
+    """
     start_time = time()
     if test_dir is None:
         with open('experiment_files/last_test.txt', 'r') as f:
@@ -82,6 +89,8 @@ def run_dymond(test_dir=None, graphs_file=None):
     if graphs_file is None:
         graphs_file = 'test_graphs.pkl'
     train_graphs = graph_utils.load_graph_ts(os.path.join(test_dir, graphs_file))
+    if fit_frames:
+        train_graphs = [ts[:fit_frames] for ts in train_graphs]
     T = len(train_graphs[0])
     fstr = os.path.join(test_dir, 'train_edgelists')
 
@@ -130,8 +139,10 @@ def run_dymond(test_dir=None, graphs_file=None):
 if __name__ == '__main__':
     import sys
     dataset_name = sys.argv[1]
+    # 第二個引數是擬合用的張數，省略則沿用舊行為（整條都看）
+    fit_frames = int(sys.argv[2]) if len(sys.argv) > 2 else 0
     test_dir = f'../test_and_generated_graphs/{dataset_name}/DYMOND'
-    run_dymond(test_dir, 'test_graphs.pkl')
+    run_dymond(test_dir, 'test_graphs.pkl', fit_frames)
 
 
 

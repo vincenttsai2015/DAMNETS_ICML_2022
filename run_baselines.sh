@@ -63,7 +63,26 @@ fi
 
 if [ "$WHICH" = "both" ] || [ "$WHICH" = "dymond" ]; then
     mkdir -p "${ROOT}/DYMOND"
-    cp "$SRC" "${ROOT}/DYMOND/test_graphs.pkl"
+    # DAMNETS 與 DYMOND 要的區間不同。前者是自迴歸的，序列第一張當種子往後生；
+    # 後者是對整條擬合統計再重生一條同長度的，給它目標窗等於讓它看過答案。
+    # 所以 DYMOND 吃觀測窗（DYMOND_OBS 指向 --t1 16 產出的那份），
+    # 生出來的 16 張才對應要預測的目標窗。
+    # 兩份的序列順序一致，取一樣多的尾巴就對得上同一批測試序列。
+    if [ -n "${DYMOND_OBS:-}" ] && [ -f "${DYMOND_OBS}" ]; then
+        echo "DYMOND 觀測窗來源: ${DYMOND_OBS}"
+        python - "$SRC" "$DYMOND_OBS" "${ROOT}/DYMOND/test_graphs.pkl" <<'PY'
+import pickle, sys
+ref, obs, out = sys.argv[1:4]
+n = len(pickle.load(open(ref, 'rb')))
+full = pickle.load(open(obs, 'rb'))
+sel = full[-n:]
+pickle.dump(sel, open(out, 'wb'), protocol=pickle.HIGHEST_PROTOCOL)
+print(f'取觀測窗最後 {n} 條（每條 {len(sel[0])} 張）')
+PY
+    else
+        echo "[WARN] 沒設 DYMOND_OBS，沿用 ${SRC}——那是目標窗，DYMOND 會看到答案"
+        cp "$SRC" "${ROOT}/DYMOND/test_graphs.pkl"
+    fi
     echo
     echo "===== DYMOND ====="
     echo "CWD=$(pwd)  python=$(command -v python)"
