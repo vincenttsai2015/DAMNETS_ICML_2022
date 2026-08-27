@@ -391,5 +391,21 @@ bash run_damnets.sh "$DS" "$MODEL" "$SEED"
 if [ "${WITH_BASELINES:-1}" = "1" ] && [ "$MODEL" = "gnn" ]; then
     echo
     echo "===== DYMOND ====="
+    # DYMOND 要吃觀測窗而不是 target 段（它是擬合統計再重生，給後半等於看到
+    # 答案）。觀測窗那份的檔名是 nx_macro_<資料集>_<mode>_L<層編號>_<層名>，
+    # 層編號在組合表裡沒有，用層名反查。
+    LAYER=${GROUP#*_}
+    DSNAME=${GROUP%%_*}
+    case "$GROUP" in
+        wiki_vote_*) DSNAME=wiki_vote; LAYER=${GROUP#wiki_vote_} ;;
+    esac
+    OBS_DIR=${OBS_DIR:-data/macro_obs}
+    OBS=$(ls "${OBS_DIR}"/nx_macro_"${DSNAME}"_"${MODE}"_L*_"${LAYER}".pkl 2>/dev/null | head -1)
+    if [ -n "$OBS" ]; then
+        export DYMOND_OBS="$OBS"
+        echo "觀測窗: $DYMOND_OBS"
+    else
+        echo "[WARN] ${OBS_DIR} 底下找不到 ${DSNAME}_${MODE}_*_${LAYER}，DYMOND 會吃到 target 段"
+    fi
     bash run_baselines.sh "$DS" "$SEED"
 fi
