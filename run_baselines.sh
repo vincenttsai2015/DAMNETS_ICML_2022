@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=dmn_base
-#SBATCH --account=ACD109125
-#SBATCH --partition=gp2d
+#SBATCH --account=acd109125
+#SBATCH --partition=8gpus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=90G
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=200G
 #SBATCH --time=48:00:00
 #SBATCH --output=logs/slurm/%x_%j.out
 #SBATCH --error=logs/slurm/%x_%j.err
@@ -23,10 +23,15 @@
 # TagGen 與 DYMOND 的原始碼沒有把 seed 接出來，重跑只會拿到不同的隨機抽樣。
 
 set -eo pipefail
-module load miniconda3/conda24.5.0_py3.9
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate damnets
+# conda 裝在家目錄，沒有對應的 module 可以載入。
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+    source "$HOME/miniconda3/etc/profile.d/conda.sh"
+    conda activate damnets
+else
+    echo "[ERROR] 找不到 ~/miniconda3，請先照執行手冊 A 段安裝"; exit 1
+fi
 export PYTHONNOUSERSITE=1
+export PIP_USER=0
 export PYTHONUNBUFFERED=1
 
 # TagGen 對每一條序列各做一次完整訓練，序列數大時單執行緒跑不完。

@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=dmn_train
-#SBATCH --account=ACD109125
-#SBATCH --partition=gp2d
+#SBATCH --account=acd109125
+#SBATCH --partition=8gpus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=90G
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=200G
 #SBATCH --time=12:00:00
 #SBATCH --output=logs/slurm/%x_%A_%a.out
 #SBATCH --error=logs/slurm/%x_%A_%a.err
@@ -19,10 +19,15 @@
 # model 只能是 gnn 或 age。gnn -> DAMNET 目錄，age -> AGE 目錄。
 
 set -eo pipefail
-module load miniconda3/conda24.5.0_py3.9
-source "$(conda info --base)/etc/profile.d/conda.sh"
-conda activate damnets
+# conda 裝在家目錄，沒有對應的 module 可以載入。
+if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+    source "$HOME/miniconda3/etc/profile.d/conda.sh"
+    conda activate damnets
+else
+    echo "[ERROR] 找不到 ~/miniconda3，請先照執行手冊 A 段安裝"; exit 1
+fi
 export PYTHONNOUSERSITE=1
+export PIP_USER=0
 cd "${SLURM_SUBMIT_DIR:-$PWD}"
 
 DS=${1:-wiki-vote}
@@ -64,7 +69,7 @@ echo "--- config 生效值 ---"
 grep -nE '^seed:|^  (max_n|N|T|epochs|batch_size):|^  path:' "$CFG" || true
 
 DATA_PATH=$(grep -E '^  path:' "$CFG" | tr -d '\r' | awk '{print $2}')
-[ -f "$DATA_PATH" ] || { echo "[ERROR] 資料檔不存在: $DATA_PATH（先跑 run_prepare_data.sh）"; exit 1; }
+[ -f "$DATA_PATH" ] || { echo "[ERROR] 資料檔不存在: $DATA_PATH（見執行手冊 C 段）"; exit 1; }
 
 # ---------- 訓練 ----------
 # get_config() 的 exp_name 結尾是 python 行程的 PID（config.run_id = os.getpid()），

@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --job-name=dmn_macro
-#SBATCH --account=ACD109125
-#SBATCH --partition=gp2d
+#SBATCH --account=acd109125
+#SBATCH --partition=8gpus
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gpus-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=90G
+#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=12
+#SBATCH --mem=200G
 #SBATCH --time=12:00:00
 #SBATCH --output=logs/slurm/%x_%A_%a.out
 #SBATCH --error=logs/slurm/%x_%A_%a.err
