@@ -7,6 +7,8 @@
 #   SEEDS="1 2" bash submit_macro.sh  只送這幾個 seed（多人分工用）
 #   ONLY=wiki_vote bash submit_macro.sh   只送名稱含此字串的組合
 #   DRY=1 bash submit_macro.sh        只看會送哪些，不實際送出
+#   MAX_RUNNING=5 bash submit_macro.sh    指定同時執行幾個，跳過自動計算
+#   MARGIN_GB=15 bash submit_macro.sh     多留一點餘裕再算併發
 #
 # 已經有結果的組合會自動跳過，跑完一批之後再執行一次就會接著送下一批。
 # 組合清單與 run_macro_damnets.sh 完全相同，index 才對得上。
@@ -17,6 +19,11 @@ cd "$(dirname "$0")"
 LIMIT=${LIMIT:-20}
 SEEDS=${SEEDS:-}
 RESULT_ROOT=../test_and_generated_graphs
+# 併發上限計算時保留的餘裕，跑到剩這麼多 GB 就不再多送。
+MARGIN_GB=${MARGIN_GB:-12}
+
+# 容量表與剩餘空間的定義共用一份，run_macro_damnets.sh 的等待也用同一組數字。
+. ./cache_size.sh
 
 COMBOS='superuser_a2q raw gnn 0
 superuser_a2q raw age 0
@@ -429,13 +436,37 @@ LIST=$(echo "$TODO" | awk 'NF { printf "%s,", $1 }' | sed 's/,$//')
 echo
 echo "index: ${LIST}"
 
+# 同時執行幾個。快取吃掉的空間跟資料集走，所以取這批裡最大的那個來算——
+# 整批都是 wiki_vote 時會自動放寬，混到 superuser 就收緊。
+if [ -n "${MAX_RUNNING:-}" ]; then
+    CONC=$MAX_RUNNING
+    CONC_WHY="MAX_RUNNING 指定"
+else
+    PEAK=$(echo "$TODO" | awk 'NF { print $2 }' | sort -u | while read -r g; do
+        cache_gb "$g"
+    done | sort -n | tail -1)
+    FREE=$(free_gb)
+    BUDGET=$(( FREE > MARGIN_GB ? FREE - MARGIN_GB : 0 ))
+    CONC=$(( BUDGET / PEAK ))
+    CONC_WHY="剩餘 ${FREE}G − 餘裕 ${MARGIN_GB}G ÷ 每組 ${PEAK}G"
+fi
+[ "$CONC" -gt "$N_TODO" ] && CONC=$N_TODO
+if [ "$CONC" -lt 1 ]; then
+    echo
+    echo "[ERROR] experiment_files 所在的檔案系統只剩 $(free_gb)G，放不下一組（每組約 ${PEAK}G）。"
+    echo "        先清 experiment_files 再送，或用 MARGIN_GB 調小餘裕。"
+    exit 1
+fi
+
+echo "同時執行 ${CONC} 個（${CONC_WHY}）"
+
 if [ -n "$DRY" ]; then
     echo "（DRY，沒有實際送出）"
-    echo "sbatch --array=${LIST} run_macro_damnets.sh"
+    echo "sbatch --array=${LIST}%${CONC} run_macro_damnets.sh"
     exit 0
 fi
 
 mkdir -p logs/slurm
-sbatch --array="${LIST}" run_macro_damnets.sh
+sbatch --array="${LIST}%${CONC}" run_macro_damnets.sh
 echo
 echo "跑完一批之後再執行一次 submit_macro.sh 就會接著送下一批。"

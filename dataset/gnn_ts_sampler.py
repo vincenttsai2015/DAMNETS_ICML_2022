@@ -20,6 +20,10 @@ class GNNTSampler(torch.utils.data.Dataset):
             args.dataset.max_n = self.max_n
         print(f'max_n: {self.max_n}')
         self.ts_list = ts_list
+        # node_feat / subgraph_idx / diffs_idx / node_feat_idx 只由 max_n 決定，
+        # 每一對算出來都一樣。存進每個快取檔的話是 0.96 MB x N x (T-1)，
+        # superuser 一組就 90 GB；算一次共用，快取只留隨圖變動的部分。
+        self.shared = self.build_shared(self.max_n)
         data_cache = os.path.join(args.save_dir, 'data_cache')
         if not os.path.isdir(data_cache):
             os.makedirs(data_cache)
@@ -47,8 +51,32 @@ class GNNTSampler(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.file_names)
 
+    @staticmethod
+    def build_shared(n):
+        """只由 max_n 決定的欄位，與圖的內容無關。"""
+        subgraph_idx, diffs_idx, node_feat_idx = [], [], []
+        for i in range(1, n):
+            idx_row, idx_col = np.meshgrid(
+                np.full(1, i, dtype=np.int64), np.arange(i))
+            idx_row = idx_row.reshape(-1, 1)
+            idx_col = idx_col.reshape(-1, 1)
+            diffs_idx += [np.concatenate([idx_row, idx_col], axis=1)]
+            subgraph_idx += [np.ones(i, dtype=np.int64) * i - 1]
+            node_feat_idx += [np.arange(i)]
+        cum_size = np.cumsum([0] + list(range(1, n)))
+        for i in range(len(diffs_idx)):
+            diffs_idx[i][:, 1] += cum_size[i]
+        return {'node_feat': np.diag(np.ones(n)),
+                'subgraph_idx': np.concatenate(subgraph_idx),
+                'diffs_idx': np.concatenate(diffs_idx),
+                'node_feat_idx': np.concatenate(node_feat_idx)}
+
     def __getitem__(self, idx):
-        return pickle.load(open(self.file_names[idx], 'rb'))
+        data = pickle.load(open(self.file_names[idx], 'rb'))
+        data.update(self.shared)
+        # collate_fn 對 diffs_idx 是原地累加，共用同一份會被前一批汙染。
+        data['diffs_idx'] = self.shared['diffs_idx'].copy()
+        return data
 
     def process_pair(self, A_1, A_2):
         n = A_1.shape[0]
@@ -56,10 +84,6 @@ class GNNTSampler(torch.utils.data.Dataset):
         edges_x = edges_x.coalesce().indices().long()
         edges_y = []
         labels = []
-        diffs_idx = []
-        subgraph_idx = []
-        node_feat_idx = []
-        node_feat = np.diag(np.ones(n))
         subgraph_count = 1
         subgraph_size = []
         prev_edges = []
@@ -78,9 +102,6 @@ class GNNTSampler(torch.utils.data.Dataset):
                 np.full(1, i, dtype=np.int64), np.arange(i))
             idx_row_gnn = idx_row_gnn.reshape(-1, 1)
             idx_col_gnn = idx_col_gnn.reshape(-1, 1)
-            diffs_idx += [
-                np.concatenate([idx_row_gnn, idx_col_gnn], axis=1)
-            ]
             labels += [
                 A_2[idx_row_gnn, idx_col_gnn].flatten().astype(np.uint8)
             ]
@@ -88,21 +109,15 @@ class GNNTSampler(torch.utils.data.Dataset):
             prev_edges += [
                 A_1[idx_row_gnn, idx_col_gnn].flatten().astype(np.uint8)
             ]
-            subgraph_idx += [np.ones_like(labels[-1]).astype(np.int64) * i - 1]
-            node_feat_idx += [np.arange(i)]  # (0, 1, ..., i-1)
             subgraph_count += 1
         cum_size = np.cumsum([0] + subgraph_size)
         for i in range(len(edges_y)):
             edges_y[i] = edges_y[i] + cum_size[i]
-            diffs_idx[i][:, 1] += cum_size[i]
+        # 只存隨圖變動的欄位，其餘由 build_shared 在 __getitem__ 補上。
         data = {'edges_x': edges_x,
                 'edges_y': torch.cat(edges_y, dim=1),
-                'node_feat': node_feat,
-                'subgraph_idx': np.concatenate(subgraph_idx),
-                'diffs_idx': np.concatenate(diffs_idx),
                 'y_label': np.concatenate(labels),
                 'prev_edges': np.concatenate(prev_edges),
-                'node_feat_idx': np.concatenate(node_feat_idx),
                 'total_subgraph_incr': sum(subgraph_size)}
         return data
 

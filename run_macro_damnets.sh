@@ -384,6 +384,28 @@ echo " model   : ${MODEL}"
 echo " seed    : ${SEED}"
 echo "=================================================="
 
+# --- 開跑前先確認放得下 ---
+# sbatch 的 %N 只限制同時執行幾個，一個 task 一結束 Slurm 立刻放下一個進來。
+# 但被砍或崩掉的 task 不會執行結尾的清理，快取還留在磁碟上，新進來的那個
+# 因此以為有空間，寫到一半再爆一次。這裡在建快取之前先擋一道。
+. ./cache_size.sh
+NEED=$(cache_gb "$GROUP")
+WAIT_MAX=${DISK_WAIT_MAX:-3600}
+waited=0
+while [ "$(free_gb)" -lt "$NEED" ]; do
+    if [ "$waited" -ge "$WAIT_MAX" ]; then
+        echo "[ERROR] 等了 ${waited}s，仍只剩 $(free_gb)G，這組需要 ${NEED}G。"
+        echo "        沒有開始跑，磁碟沒有被寫爆。清掉殘留的快取之後重送："
+        echo "          ~/miniconda3/envs/damnets/bin/python check_broken.py"
+        echo "          rm -rf experiment_files"
+        exit 1
+    fi
+    echo "[WAIT] 剩餘 $(free_gb)G < 需要 ${NEED}G，等 60s（已等 ${waited}s）"
+    sleep 60
+    waited=$((waited + 60))
+done
+echo "磁碟檢查：剩餘 $(free_gb)G，這組需要 ${NEED}G"
+
 bash run_damnets.sh "$DS" "$MODEL" "$SEED"
 
 # TagGen 與 DYMOND 不需要訓練，直接吃剛產出的 test_graphs.pkl。

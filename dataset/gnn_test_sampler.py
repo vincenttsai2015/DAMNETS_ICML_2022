@@ -29,27 +29,20 @@ class GNNTestSampler(torch.utils.data.Dataset):
             ts_batch = []
             # n_timesteps = 1 if k is None else max(self.T - k, 1)
             for t in range(self.T - 1):
+                # node_feat / edges_x / prev_edges / adj 四個都能從稀疏的鄰接
+                # 還原，而稠密版一張就 800 KB。只存非零位置與節點數，
+                # 由 __getitem__ 重建。
                 G_0 = ts_list[bb][t]
                 n = G_0.number_of_nodes()
                 A = nx.to_numpy_array(G_0)
                 padded_A = np.zeros((self.max_n, self.max_n))
                 padded_A[0:n, 0:n] = A
-                edges_x = torch.from_numpy(padded_A).to_sparse()
-                edges_x = edges_x.coalesce().indices().long()
-                
-                v = np.zeros(self.max_n)
-                v[:n] = np.ones(n)
-                node_feat = np.diag(v)
-
-                idx = np.array([[i, j] for i in range(1, self.max_n) for j in range(i)])
-                prev_edges = padded_A[idx[:, 0], idx[:, 1]]
-                data = {'node_feat': node_feat,
-                        'edges_x': edges_x,
-                        'prev_edges': prev_edges,
-                        'adj': padded_A,
-                        'ts_ix': ts_ix,}
-                        # 'y': y if y is not None else None}
-                ts_batch.append(data)
+                r, c = np.nonzero(padded_A)
+                ts_batch.append({'coo': (r.astype(np.int32),
+                                         c.astype(np.int32),
+                                         padded_A[r, c]),
+                                 'n': n,
+                                 'ts_ix': ts_ix})
             path = os.path.join(data_cache, f'{tag}_{bb}.pkl')
             pickle.dump(ts_batch, open(path, 'wb'))
             self.file_names.append(path)
@@ -86,5 +79,23 @@ class GNNTestSampler(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.file_names)
 
+    def expand(self, d):
+        """把存下來的稀疏形式還原成 collate_sampling 期望的四個陣列。"""
+        r, c, v = d['coo']
+        padded_A = np.zeros((self.max_n, self.max_n))
+        padded_A[r, c] = v
+
+        node_feat = np.zeros((self.max_n, self.max_n))
+        np.fill_diagonal(node_feat[:d['n'], :d['n']], 1.0)
+
+        idx = np.array([[i, j] for i in range(1, self.max_n) for j in range(i)])
+        return {'node_feat': node_feat,
+                'edges_x': torch.from_numpy(padded_A).to_sparse()
+                                .coalesce().indices().long(),
+                'prev_edges': padded_A[idx[:, 0], idx[:, 1]],
+                'adj': padded_A,
+                'ts_ix': d['ts_ix']}
+
     def __getitem__(self, idx):
-        return pickle.load(open(self.file_names[idx], 'rb'))
+        return [self.expand(d)
+                for d in pickle.load(open(self.file_names[idx], 'rb'))]
